@@ -1,0 +1,50 @@
+[project]
+name = "giver-index"
+version = "0.1.0"
+description = "GIVER Index — open standard for measuring circular vs linear human-AI co-creation"
+readme = "README.md"
+license = {text = "AGPL-3.0"}
+requires-python = ">=3.12"
+authors = [
+    {name = "Ethan Davidson", email = "ethan.r.davidson@gmail.com"}
+]
+keywords = ["circularity", "giver-index", "hofstede", "world-values-survey", "agenticracy"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "requests>=2.32.0",
+    "pandas>=2.2.0",
+    "pyarrow>=14.0.0",
+    "pyyaml>=6.0.0",
+    "rich>=13.0.0",
+    "click>=8.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+giver-index = "giver_index.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

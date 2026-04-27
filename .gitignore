@@ -1,0 +1,25 @@
+# Raw cached feeds (re-fetched at runtime)
+data/feeds/
+
+# Computed outputs (regenerated)
+data/outputs/*.csv
+data/outputs/*.json
+data/outputs/*.geojson
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# Env
+.env
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
