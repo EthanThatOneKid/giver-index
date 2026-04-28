@@ -3,14 +3,31 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 import pandas as pd
 
 from .feeds import FeedCache
-from .scoring import compute_generative, compute_giver_index, compute_rooted
+from .scoring import (
+    compute_evidence_based,
+    compute_generative,
+    compute_giver_index,
+    compute_rooted,
+)
 
 log = logging.getLogger(__name__)
+
+WVS_COUNTRY_ALIASES = {
+    "Bosnia Herzegovina": "Bosnia and Herzegovina",
+    "Great Britain": "United Kingdom",
+    "Hong Kong SAR": "Hong Kong S.A.R.",
+    "Macau SAR": "Macao S.A.R",
+    "North Ireland": "United Kingdom",
+    "Serbia": "Republic of Serbia",
+    "Taiwan ROC": "Taiwan",
+    "United States": "United States of America",
+}
 
 
 class GiverComputer:
@@ -45,11 +62,14 @@ class GiverComputer:
 
         # Step 2 — fetch feeds
         hofstede_df = self._fetch_hofstede()
+        wvs_df = self._fetch_wvs(countries)
         log.info("  Hofstede loaded: %d rows", len(hofstede_df))
+        log.info("  WVS loaded: %d rows", len(wvs_df))
 
         # Step 3 — join dimension sub-scores
         df = countries.copy()
         df = df.merge(hofstede_df[["iso3", "ltv", "ivr"]], on="iso3", how="left")
+        df = df.merge(wvs_df, on="iso3", how="left")
         df["region"] = df["region"].fillna("Unknown")
 
         # Placeholder joins for optional feeds
@@ -57,6 +77,7 @@ class GiverComputer:
 
         # Step 3b — compute currently-available component scores explicitly
         df["generative"] = compute_generative(df)
+        df["evidence_based"] = compute_evidence_based(df)
         df["rooted"] = compute_rooted(df)
 
         # Step 4 — compute composite
@@ -135,6 +156,7 @@ class GiverComputer:
             # Patch iso3=-99 entries that Hofstede has real codes for
             patch_iso3 = {
                 "France": "FRA",
+                "Kosovo": "XKX",
                 "Norway": "NOR",
             }
             for name, iso3 in patch_iso3.items():
@@ -216,6 +238,42 @@ class GiverComputer:
 
         return df
 
+    def _fetch_wvs(self, countries: pd.DataFrame) -> pd.DataFrame:
+        """Load cached WVS Inglehart data and map it onto ISO3 country codes."""
+        path = self.feed_cache.get("wvs_inglehart")
+        if path is None:
+            fallback = self.feed_cache.cache_dir / "wvs_inglehart.csv"
+            path = fallback if fallback.exists() else None
+        if not path or not path.exists():
+            return pd.DataFrame(columns=["iso3", "self_expression", "secular_rational"])
+
+        wvs = pd.read_csv(path)
+        if wvs.empty:
+            return pd.DataFrame(columns=["iso3", "self_expression", "secular_rational"])
+
+        required = {"country", "region", "x", "y"}
+        if not required.issubset(wvs.columns):
+            log.warning("WVS file missing expected columns: %s", sorted(required - set(wvs.columns)))
+            return pd.DataFrame(columns=["iso3", "self_expression", "secular_rational"])
+
+        wvs = wvs[wvs["region"] != "AI system"].copy()
+        wvs["country_name"] = wvs["country"].replace(WVS_COUNTRY_ALIASES)
+        wvs["country_key"] = wvs["country_name"].map(_normalize_country_name)
+
+        country_lookup = countries[["iso3", "country_name"]].copy()
+        country_lookup["country_key"] = country_lookup["country_name"].map(_normalize_country_name)
+        country_lookup = country_lookup.drop_duplicates(subset="country_key", keep="first")
+
+        matched = wvs.merge(country_lookup[["iso3", "country_key"]], on="country_key", how="left")
+        matched = matched.dropna(subset=["iso3"]).copy()
+        matched["self_expression"] = pd.to_numeric(matched["y"], errors="coerce")
+        matched["secular_rational"] = pd.to_numeric(matched["x"], errors="coerce")
+        matched = (
+            matched.groupby("iso3", as_index=False)[["self_expression", "secular_rational"]]
+            .mean()
+        )
+        return matched
+
     def _export_geojson(self, df: pd.DataFrame, year: int) -> Path:
         """Merge GIVER scores onto country GeoJSON for map visualization."""
         import json
@@ -235,3 +293,9 @@ class GiverComputer:
         with open(out_path, "w") as f:
             json.dump(gj, f)
         return out_path
+
+
+def _normalize_country_name(value: str) -> str:
+    value = value.lower().strip().replace("&", "and")
+    value = re.sub(r"[^a-z0-9]+", " ", value)
+    return re.sub(r"\s+", " ", value).strip()

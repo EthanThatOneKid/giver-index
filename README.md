@@ -6,7 +6,7 @@ An open standard for measuring the circular vs. linear tilt of cultures, organiz
 
 ## Status
 
-**54 countries currently score above zero** from the Hofstede-only pilot. **184 countries still sit at zero** until WVS and other feeds are joined. Work in progress.
+**109 countries currently score above zero** in the Hofstede + WVS pilot. **100 countries now carry a WVS evidence-based signal**, while the remaining gaps still need World Bank, Pew, GitHub, and other feeds. Work in progress.
 
 ## Quick Start
 
@@ -17,25 +17,27 @@ giver-index compute --year 2025
 
 ## Current Findings (2025 Pilot)
 
-**Coverage:** 54 of 238 countries currently score above zero in the Hofstede-only pipeline; 184 still score 0 due to missing LTV/IVR and unjoined secondary feeds.
+**Coverage:** 109 of 239 countries currently score above zero in the Hofstede + WVS pipeline. WVS now fills 100 countries for the `evidence_based` dimension, including many countries that previously scored 0 across the board.
 
 **Top scorers (most circular):**
-| Rank | Country | LTV | IVR | GIVER |
-|---|---|---|---|---|
-| 1 | Belgium | 82 | 57 | 69.1 |
-| 2 | Japan | 88 | 42 | 64.8 |
-| 3 | South Korea | 100 | 29 | 64.5 |
-| 4 | Sweden | 53 | 78 | 63.7 |
-| 5 | Austria | 60 | 63 | 60.0 |
+| Rank | Country | LTV | WVS Self-Expression | IVR | GIVER |
+|---|---|---|---|---|---|
+| 1 | Japan | 88 | 1.695 | 42 | 74.2 |
+| 2 | South Korea | 100 | 1.283 | 29 | 70.8 |
+| 3 | Sweden | 53 | 1.086 | 78 | 68.6 |
+| 4 | Belgium | 82 | 0.317 | 57 | 66.0 |
+| 5 | Luxembourg | 64 | 0.438 | 56 | 59.6 |
 
-**Baseline (linear archetype):**
-| Country | LTV | IVR | GIVER |
-|---|---|---|---|
-| United States | 26 | 68 | 44.2 |
-| Saudi Arabia | 36 | 52 | 41.6 |
-| India | 51 | 26 | 36.7 |
+**Newly lifted by WVS (no Hofstede, but no longer zero):**
+| Country | WVS Self-Expression | GIVER |
+|---|---|---|
+| Germany | 1.211 | 23.3 |
+| Denmark | 0.697 | 19.1 |
+| Netherlands | 0.567 | 18.0 |
+| Switzerland | 0.221 | 15.2 |
+| Spain | 0.195 | 15.0 |
 
-**Note:** Switzerland, Netherlands, Ireland, Greece, Portugal, Denmark, Bulgaria — and most of Africa, Middle East, and Southeast Asia — score 0 until WVS and additional feeds are joined (see Issues).
+**Still missing:** 130 countries still score 0 due to missing Hofstede and WVS coverage, or because only still-unwired feeds would contribute meaningful signal there.
 
 **Output:** `giver-index export-slopometry --year 2025` produces MiroFish-compatible seed data.
 
