@@ -13,6 +13,7 @@ from rich.console import Console
 from . import __version__
 from .giver import GiverComputer
 from .slopometry import build_seed_df, generate_narrative
+from .mirofish import export_mirofish_context
 
 console = Console()
 
@@ -112,6 +113,38 @@ def export_slopometry(year: int, top_n: int, output_dir: Path | None, data_dir: 
     console.print(seed_df.head(5).to_string(index=False))
     console.print("\nNarrative excerpt:")
     console.print(narrative[:500] + "...")
+
+
+@main.command("export-mirofish")
+@click.option("--year", "-y", type=int, default=2025, help="Year to export")
+@click.option("--output-dir", "-o", type=click.Path(file_okay=False), default=None)
+@click.option("--data-dir", "-d", type=click.Path(exists=True, file_okay=False), default=None)
+def export_mirofish(year: int, output_dir: Path | None, data_dir: Path | None) -> None:
+    """Export MiroFish-compatible data."""
+    data_path = Path(data_dir) if data_dir else None
+    computer = GiverComputer(data_path)
+    out_dir = Path(output_dir) if output_dir else computer.output_dir
+
+    # Load computed GIVER data
+    csv_path = computer.output_dir / f"giver_index_{year}.csv"
+    if not csv_path.exists():
+        console.print(f"[red]No data for {year}. Run `giver-index compute --year {year}` first.[/red]")
+        sys.exit(1)
+
+    df = pd.read_csv(csv_path)
+
+    # Load Top 200 people data
+    people_path = computer.data_dir / "top200" / "consolidated_top_200.csv"
+    if not people_path.exists():
+        console.print(f"[red]Top 200 data not found: {people_path}[/red]")
+        sys.exit(1)
+
+    people_df = pd.read_csv(people_path)
+
+    # Export MiroFish context
+    export_mirofish_context(df, people_df, out_dir)
+
+    console.print(f"[green]✓[/green] Exported MiroFish context to {out_dir}")
 
 
 if __name__ == "__main__":

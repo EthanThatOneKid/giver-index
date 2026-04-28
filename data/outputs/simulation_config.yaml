@@ -1,0 +1,20 @@
+simulation:
+  convergence:
+    delta_threshold: 0.5
+    global_score_threshold: 55
+    max_cycles_without_delta: 10
+  description: Model the transition from linear to circular worldviews
+  leagues:
+  - agent_file: seed_countries.csv
+    n_agents: 239
+    name: countries
+  - agent_file: seed_people.csv
+    n_agents: 200
+    name: people
+  name: GIVER Displacement Theory
+  weights:
+    evidence_based: 0.15
+    generative: 0.2
+    impact: 0.25
+    rooted: 0.2
+    verifiable: 0.2

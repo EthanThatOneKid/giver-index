@@ -6,6 +6,8 @@ data/outputs/*.csv
 data/outputs/*.json
 data/outputs/*.geojson
 data/outputs/*.txt
+data/outputs/*.yaml
+data/outputs/*.md
 
 # Python
 __pycache__/
