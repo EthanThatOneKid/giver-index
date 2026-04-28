@@ -6,15 +6,7 @@ An open standard for measuring the circular vs. linear tilt of cultures, organiz
 
 ## Status
 
-The project is now beyond scaffolding:
-
-- GitHub repo created and populated
-- Python package and CLI implemented
-- Core GIVER scoring pipeline working
-- Hofstede country join wired and producing live country scores
-- Slopometry export added for MiroFish seed data
-- Public Zo Space map deployed
-- Public API routes deployed for map data and GeoJSON
+**83 countries scored** with Hofstede LTV/IVR data. **155 countries still need WVS data** to fill LTV/IVR gaps. Work in progress.
 
 ## Quick Start
 
