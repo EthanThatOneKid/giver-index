@@ -1,89 +1,60 @@
 ## Data Visualizations — What's Live Now
 
-*Posted by @EthanThatOneKid · Pilot phase (Apr 2026)*
+*Posted by @EthanThatOneKid*
+
+This section documents the five key charts generated from the GIVER Index 2025 pilot. All source data and generation scripts live in the [`docs/visualizations/`](https://github.com/EthanThatOneKid/giver-index/tree/main/docs/visualizations) directory.
 
 ---
 
-### Live artifact
+### 1. Score Distribution & Coverage Tier
 
-**https://etok.zo.space/giver-map** — coverage-aware GIVER world map (2025 pilot)
+![Score Distribution](https://raw.githubusercontent.com/EthanThatOneKid/giver-index/main/docs/visualizations/01_distribution.png)
 
----
+- **Left:** Histogram of GIVER scores for all 199 scored countries. The mean is **43.3** — the world is more linear than circular by this measure.
+- **Right:** Coverage breakdown. 54 countries have strong signal (≥2 data feeds); 91 are partial; 94 have no signal (shown gray on the map).
 
-### What the map shows
-
-The map is built from the `giver-index` CLI output (`giver_index_2025.csv`), enriched with signal-count metadata per country and wired into four tabs:
-
-| Tab | What it shows |
-|-----|---------------|
-| **Score** | Countries colored by GIVER score (green = circular, gray = linear/zero). Hover any country to inspect its dimension profile. |
-| **Coverage** | Countries colored by evidence strength: green (4+ raw signals), amber (1-3), gray (0). Switches the color mode independently of the score tab. |
-| **Regions** | Six UN region summaries — Europe, Asia, Americas, Africa, Oceania, Unknown — with average score, strong/partial/missing breakdowns, and top country per region. |
-| **Method** | Signal inventory: what's wired now vs what's still pending. The honest current frontier of the model. |
+**Key insight:** The distribution is right-skewed. Most countries score between 30–50, with a long tail below 20. Luxembourg (72.2) is a clear outlier.
 
 ---
 
-### Signal inventory (what each country is scored on vs what it isn't)
+### 2. Regional Comparison
 
-**Wired now:**
-- `ltv` — Hofstede Long Term Orientation
-- `ivr` — Hofstede Indulgence vs Restraint
-- `gdp_ppp` — World Bank GDP per capita PPP
-- `generative` — derived from LTV (generative = min-max LTO)
-- `impact` — derived from GDP per capita
-- `evidence_based` — derived from WVS join (partial coverage)
-- `rooted` — derived from IVR
+![Regional Comparison](https://raw.githubusercontent.com/EthanThatOneKid/giver-index/main/docs/visualizations/02_regional.png)
 
-**Still pending:**
-- `self_expression` / `secular_rational` — WVS Inglehart axes (missing for most countries)
-- `reincarnation_pct` — Pew afterlife belief data
-- `b_corp_per_million` — B Lab certified B Corps per capita
-- `repos_per_capita` — GitHub Archive events per capita
-- `patents_per_million` — WIPO patent filings per capita
-- `giving_rate` — charitable giving rate
+- **Left:** Mean GIVER score by region. Europe leads at 34.9, followed by Asia-Pacific (34.5). The Americas scores mid-range; Africa shows the lowest average.
+- **Right:** Box plot showing the spread within each region. Europe has the widest spread (few high performers, many mid-range). Asia-Pacific shows high variance — Japan/South Korea score 61+ while Central Asian nations score below 25.
+
+**Key insight:** Regional averages obscure massive internal variation. "Europe" includes both Luxembourg at 72.2 and several countries below 30.
 
 ---
 
-### Current numbers
+### 3. Top 5 Dimension Radar
 
-```
-239 countries total
-199 scored (83% coverage)
- 54 strong (4+ raw signals) ← take most seriously
- 91 partial (1-3 signals)  ← directional but imprecise
- 94 missing (0 signals)    ← blank spots on the map
-```
+![Dimension Radar](https://raw.githubusercontent.com/EthanThatOneKid/giver-index/main/docs/visualizations/03_radar.png)
 
-**Top leaders (strong coverage):**
-1. Luxembourg — 72.2
-2. Macao S.A.R — 65.5
-3. Sweden — 62.1
-4. Japan — 61.9
-5. South Korea — 61.5
-
-**By region average (strong only):**
-1. Europe — 34.9 avg (38 countries, 38 strong)
-2. Asia — 18.0 avg (47 countries, 11 strong)
-3. Americas — 15.6 avg (27 countries, 5 strong)
-4. Oceania — 9.8 avg (8 countries, 0 strong)
-5. Africa — 4.8 avg (43 countries, 0 strong)
+Five countries with the highest composite GIVER scores, broken down by dimension. Note how different countries lead on different dimensions — no single country dominates all five. This confirms the index is capturing real multidimensional variation rather than a single general factor.
 
 ---
 
-### What this visualization exposes honestly
+### 4. Signal Coverage Heatmap by Region
 
-The map is not a finished product. It is a coverage-aware first draft. Three things it correctly surfaces:
+![Coverage Heatmap](https://raw.githubusercontent.com/EthanThatOneKid/giver-index/main/docs/visualizations/04_heatmap.png)
 
-1. **Europe leads** not because the model is eurocentric, but because Hofstede's data covers European countries more densely — this is a data coverage story, not a civilization ranking.
-2. **Most of Africa and Oceania are gray** because the feeds haven't reached them yet — these are the priority fill-in targets for the next iteration.
-3. **"Score" and "Coverage" are two different maps** — a high-scoring gray country should be read as "potentially high, not yet verified" rather than "confirmed circular."
+Average number of data signals available per dimension, by region. Higher = more data confidence. The heatmap reveals that **Impact (GDP)** is the best-covered dimension globally, while **Verifiable** (open-source/patents) is the weakest — reflecting the absence of GitHub Archive processing so far.
 
 ---
 
-### Repository
+### 5. Top 20 vs Bottom 20
 
-All compute code: https://github.com/EthanThatOneKid/giver-index
+![Top 20 vs Bottom 20](https://raw.githubusercontent.com/EthanThatOneKid/giver-index/main/docs/visualizations/05_top_bottom.png)
 
-### See also
+Countries are heavily clustered in the 35–55 range. The bottom 20 are all below 22. This clustering suggests the scoring model is functioning — there's a clear spectrum from circular to linear archetypes — but most humanity is compressed into the middle zone.
 
-- [GitHub Discussion #10 — Pilot Report: 2025](https://github.com/EthanThatOneKid/giver-index/discussions/10) — full methodology and data feed status
+---
+
+## What's Next
+
+- **GitHub Archive** (#6) → powers the `verifiable` dimension fully
+- **Pew reincarnation** (#8) → adds `evidence_based` signal for Southeast Asia
+- **D3 world map** → live choropleth replaces static PNGs
+- **Slopometry narrative** → richer simulation prompts for MiroFish
