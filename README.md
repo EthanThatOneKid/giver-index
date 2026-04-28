@@ -4,6 +4,18 @@
 
 An open standard for measuring the circular vs. linear tilt of cultures, organizations, and individuals — and tracking displacement toward rooted, high-impact co-creation between humans and AI.
 
+## Status
+
+The project is now beyond scaffolding:
+
+- GitHub repo created and populated
+- Python package and CLI implemented
+- Core GIVER scoring pipeline working
+- Hofstede country join wired and producing live country scores
+- Slopometry export added for MiroFish seed data
+- Public Zo Space map deployed
+- Public API routes deployed for map data and GeoJSON
+
 ## Quick Start
 
 ```bash
@@ -34,6 +46,13 @@ giver-index compute --year 2025
 **Note:** Switzerland, Netherlands, Ireland, Greece, Portugal, Denmark, Bulgaria — and most of Africa, Middle East, and Southeast Asia — score 0 until WVS and additional feeds are joined (see Issues).
 
 **Output:** `giver-index export-slopometry --year 2025` produces MiroFish-compatible seed data.
+
+## Public Artifacts
+
+- Map page: https://etok.zo.space/giver-map
+- Map data API: https://etok.zo.space/api/giver-map-data
+- GeoJSON API: https://etok.zo.space/api/geo-countries
+- GitHub repo: https://github.com/EthanThatOneKid/giver-index
 
 ## Project Structure
 

@@ -201,6 +201,15 @@ class GiverComputer:
             "SEA": "SGP",  # Southeast Asia → Singapore
         }
         df["iso3"] = df["hofstede_code"].map(iso3_map).fillna(df["hofstede_code"])
+
+        # Auto-map: Hofstede codes that happen to be valid ISO3
+        missing_iso3 = df[df["iso3"].isna()]["hofstede_code"].unique()
+        for code in missing_iso3:
+            if code == code.upper() and len(code) == 3:
+                df.loc[df["hofstede_code"] == code, "iso3"] = code
+
+        df["iso3"] = df["iso3"].fillna(df["hofstede_code"])
+
         # Numeric cleanup
         for col in ["ltv", "ivr"]:
             if col in df.columns:
