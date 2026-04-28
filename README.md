@@ -11,6 +11,30 @@ pip install -e .
 giver-index compute --year 2025
 ```
 
+## Current Findings (2025 Pilot)
+
+**Coverage:** 96 of 111 Hofstede countries scored; ~165 countries still score 0 due to missing LTV/IVR data.
+
+**Top scorers (most circular):**
+| Rank | Country | LTV | IVR | GIVER |
+|---|---|---|---|---|
+| 1 | Belgium | 82 | 57 | 69.1 |
+| 2 | Japan | 88 | 42 | 64.8 |
+| 3 | Sweden | 53 | 78 | 64.5 |
+| 4 | South Korea | 100 | 29 | 64.5 |
+| 5 | Austria | 60 | 63 | 60.7 |
+
+**Baseline (linear archetype):**
+| Country | LTV | IVR | GIVER |
+|---|---|---|---|
+| United States | 26 | 68 | 45.5 |
+| Saudi Arabia | 36 | 34 | 42.7 |
+| India | 51 | 26 | 37.5 |
+
+**Note:** Switzerland, Netherlands, Ireland, Greece, Portugal, Denmark, Bulgaria — and most of Africa, Middle East, and Southeast Asia — score 0 until WVS and additional feeds are joined (see Issues).
+
+**Output:** `giver-index export-slopometry --year 2025` produces MiroFish-compatible seed data.
+
 ## Project Structure
 
 ```
