@@ -5,6 +5,7 @@ data/feeds/
 data/outputs/*.csv
 data/outputs/*.json
 data/outputs/*.geojson
+data/outputs/*.txt
 
 # Python
 __pycache__/
