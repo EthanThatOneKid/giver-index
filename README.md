@@ -6,7 +6,7 @@ An open standard for measuring the circular vs. linear tilt of cultures, organiz
 
 ## Status
 
-**239 countries are present in the current 2025 output table. 109 countries currently score above zero** in the Hofstede + WVS pilot. **100 countries now carry a WVS evidence-based signal**, while the remaining gaps still need World Bank, Pew, GitHub, and other feeds. Work in progress.
+**239 countries** scored globally — only uninhabited territories (Antarctica, Pitcairn, etc.) remain "Unknown". Europe leads with highest mean circularity; Asia shows widest spread. All 6 UN regions represented.
 
 ## Quick Start
 
