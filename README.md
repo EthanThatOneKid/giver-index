@@ -6,7 +6,7 @@ An open standard for measuring the circular vs. linear tilt of cultures, organiz
 
 ## Status
 
-**83 countries scored** with Hofstede LTV/IVR data. **155 countries still need WVS data** to fill LTV/IVR gaps. Work in progress.
+**54 countries currently score above zero** from the Hofstede-only pilot. **184 countries still sit at zero** until WVS and other feeds are joined. Work in progress.
 
 ## Quick Start
 
@@ -17,23 +17,23 @@ giver-index compute --year 2025
 
 ## Current Findings (2025 Pilot)
 
-**Coverage:** 96 of 111 Hofstede countries scored; ~165 countries still score 0 due to missing LTV/IVR data.
+**Coverage:** 54 of 238 countries currently score above zero in the Hofstede-only pipeline; 184 still score 0 due to missing LTV/IVR and unjoined secondary feeds.
 
 **Top scorers (most circular):**
 | Rank | Country | LTV | IVR | GIVER |
 |---|---|---|---|---|
 | 1 | Belgium | 82 | 57 | 69.1 |
 | 2 | Japan | 88 | 42 | 64.8 |
-| 3 | Sweden | 53 | 78 | 64.5 |
-| 4 | South Korea | 100 | 29 | 64.5 |
-| 5 | Austria | 60 | 63 | 60.7 |
+| 3 | South Korea | 100 | 29 | 64.5 |
+| 4 | Sweden | 53 | 78 | 63.7 |
+| 5 | Austria | 60 | 63 | 60.0 |
 
 **Baseline (linear archetype):**
 | Country | LTV | IVR | GIVER |
 |---|---|---|---|
-| United States | 26 | 68 | 45.5 |
-| Saudi Arabia | 36 | 34 | 42.7 |
-| India | 51 | 26 | 37.5 |
+| United States | 26 | 68 | 44.2 |
+| Saudi Arabia | 36 | 52 | 41.6 |
+| India | 51 | 26 | 36.7 |
 
 **Note:** Switzerland, Netherlands, Ireland, Greece, Portugal, Denmark, Bulgaria — and most of Africa, Middle East, and Southeast Asia — score 0 until WVS and additional feeds are joined (see Issues).
 

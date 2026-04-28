@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import math
-from typing import Optional
+
 import pandas as pd
-import numpy as np
 
 
 def z_score(series: pd.Series, eps: float = 1e-8) -> pd.Series:
@@ -38,7 +37,7 @@ def compute_generative(df: pd.DataFrame) -> pd.Series:
     return min_max(scores)
 
 
-def compute_impact(df: pd.DataFrame, b_corp_df: Optional[pd.DataFrame] = None) -> pd.Series:
+def compute_impact(df: pd.DataFrame, b_corp_df: pd.DataFrame | None = None) -> pd.Series:
     """Impact = composite of structural capacity (GDP) + certified impact (B Corps)."""
     gdp_col = "gdp_ppp"  # placeholder — will come from World Bank join
     if gdp_col in df.columns:
@@ -59,7 +58,7 @@ def compute_impact(df: pd.DataFrame, b_corp_df: Optional[pd.DataFrame] = None) -
     return combined
 
 
-def compute_verifiable(df: pd.DataFrame, github_df: Optional[pd.DataFrame] = None) -> pd.Series:
+def compute_verifiable(df: pd.DataFrame, github_df: pd.DataFrame | None = None) -> pd.Series:
     """Verifiable = log(GitHub repos per capita) + patent density.
 
     Signals open collaboration + verifiable invention.
@@ -81,7 +80,7 @@ def compute_verifiable(df: pd.DataFrame, github_df: Optional[pd.DataFrame] = Non
     return github_norm * 0.5 + patent_norm * 0.5 if not patent_norm.empty else github_norm
 
 
-def compute_evidence_based(df: pd.DataFrame, pew_df: Optional[pd.DataFrame] = None) -> pd.Series:
+def compute_evidence_based(df: pd.DataFrame, pew_df: pd.DataFrame | None = None) -> pd.Series:
     """Evidence-based = WVS self-expression score + Pew reincarnation belief.
 
     Self-expression → empirical worldview; reincarnation belief → circular karmic lens.
@@ -102,7 +101,7 @@ def compute_evidence_based(df: pd.DataFrame, pew_df: Optional[pd.DataFrame] = No
     return wvs_norm * 0.6 + pew_norm * 0.4 if not pew_norm.empty else wvs_norm
 
 
-def compute_rooted(df: pd.DataFrame, giving_df: Optional[pd.DataFrame] = None) -> pd.Series:
+def compute_rooted(df: pd.DataFrame, giving_df: pd.DataFrame | None = None) -> pd.Series:
     """Rooted = Hofstede Indulgence vs Restraint (IVR) + charitable giving rate.
 
     High IVR + high giving = legacy-building, not extractive.
@@ -138,7 +137,7 @@ DEFAULT_WEIGHTS = {
 
 def compute_giver_index(
     df: pd.DataFrame,
-    weights: Optional[dict[str, float]] = None,
+    weights: dict[str, float] | None = None,
 ) -> pd.Series:
     """Compute composite GIVER index for a country DataFrame.
 

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
-import hashlib
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
 from typing import Any
 
 import requests
@@ -138,7 +138,7 @@ class FeedCache:
         entry = {
             "feed_id": feed_id,
             "filename": filename,
-            "cached_at": datetime.now(timezone.utc).isoformat(),
+            "cached_at": datetime.now(UTC).isoformat(),
             **metadata,
         }
         self._registry[feed_id] = entry
@@ -181,8 +181,3 @@ class FeedCache:
         metadata = {"url": url, "size_bytes": len(resp.content)}
         self.set(feed_id, f"{feed_id}.geojson", metadata)
         return out_path
-
-
-# ---------------------------------------------------------------------------
-# Stub dataclass (defined after FeedSpec due to ordering)
-# ---------------------------------------------------------------------------

@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
 from .feeds import FeedCache
-from .scoring import compute_giver_index, DEFAULT_WEIGHTS
+from .scoring import compute_generative, compute_giver_index, compute_rooted
 
 log = logging.getLogger(__name__)
 
@@ -17,18 +16,18 @@ log = logging.getLogger(__name__)
 class GiverComputer:
     """Orchestrates feed fetching, scoring, and output for the GIVER index."""
 
-    def __init__(self, data_dir: Optional[Path] = None) -> None:
+    def __init__(self, data_dir: Path | None = None) -> None:
         self.data_dir = data_dir or (Path(__file__).parent.parent.parent / "data")
         self.feed_cache = FeedCache(self.data_dir / "feeds")
         self.output_dir = self.data_dir / "outputs"
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self._country_meta: Optional[pd.DataFrame] = None
+        self._country_meta: pd.DataFrame | None = None
 
     # -------------------------------------------------------------------------
     # Public API
     # -------------------------------------------------------------------------
 
-    def compute(self, year: int = 2025, weights: Optional[dict[str, float]] = None) -> pd.DataFrame:
+    def compute(self, year: int = 2025, weights: dict[str, float] | None = None) -> pd.DataFrame:
         """Compute the GIVER index for all available countries.
 
         Steps:
@@ -51,9 +50,14 @@ class GiverComputer:
         # Step 3 — join dimension sub-scores
         df = countries.copy()
         df = df.merge(hofstede_df[["iso3", "ltv", "ivr"]], on="iso3", how="left")
+        df["region"] = df["region"].fillna("Unknown")
 
         # Placeholder joins for optional feeds
         # TODO: Wire up World Bank, Pew, WVS, GitHub Archive when available
+
+        # Step 3b — compute currently-available component scores explicitly
+        df["generative"] = compute_generative(df)
+        df["rooted"] = compute_rooted(df)
 
         # Step 4 — compute composite
         df["giver_score"] = compute_giver_index(df, weights)
@@ -124,16 +128,16 @@ class GiverComputer:
                 records.append({
                     "iso3": props.get("ISO3166-1-Alpha-3", ""),
                     "country_name": props.get("name", ""),
-                    "region": props.get("REGION_UN", ""),
+                    "region": props.get("REGION_UN", "Unknown"),
                 })
             df = pd.DataFrame(records).dropna(subset=["iso3"])
 
             # Patch iso3=-99 entries that Hofstede has real codes for
-            PATCH_ISO3 = {
+            patch_iso3 = {
                 "France": "FRA",
                 "Norway": "NOR",
             }
-            for name, iso3 in PATCH_ISO3.items():
+            for name, iso3 in patch_iso3.items():
                 df.loc[df["country_name"] == name, "iso3"] = iso3
 
             # Drop territory placeholders (iso3 is still -99 or similar)
@@ -223,10 +227,10 @@ class GiverComputer:
         with open(geo_path) as f:
             gj = json.load(f)
 
-        score_map = dict(zip(df["iso3"], df["giver_score"]))
+        score_map = dict(zip(df["iso3"], df["giver_score"], strict=True))
         for feat in gj["features"]:
             iso = feat["properties"].get("ISO3166-1-Alpha-3", "")
-            feat["properties"]["giver_score"] = score_map.get(iso, None)
+            feat["properties"]["giver_score"] = score_map.get(iso)
 
         with open(out_path, "w") as f:
             json.dump(gj, f)

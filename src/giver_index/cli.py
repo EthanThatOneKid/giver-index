@@ -7,12 +7,12 @@ import sys
 from pathlib import Path
 
 import click
-from rich.console import Console
 import pandas as pd
+from rich.console import Console
 
+from . import __version__
 from .giver import GiverComputer
 from .slopometry import build_seed_df, generate_narrative
-from . import __version__
 
 console = Console()
 
@@ -108,9 +108,9 @@ def export_slopometry(year: int, top_n: int, output_dir: Path | None, data_dir: 
 
     console.print(f"[green]✓[/green] Seed CSV: {seed_path} ({len(seed_df)} agents)")
     console.print(f"[green]✓[/green] Narrative: {narrative_path}")
-    console.print(f"\nSeed preview:")
+    console.print("\nSeed preview:")
     console.print(seed_df.head(5).to_string(index=False))
-    console.print(f"\nNarrative excerpt:")
+    console.print("\nNarrative excerpt:")
     console.print(narrative[:500] + "...")
 
 
