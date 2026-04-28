@@ -8,8 +8,10 @@ from pathlib import Path
 
 import click
 from rich.console import Console
+import pandas as pd
 
 from .giver import GiverComputer
+from .slopometry import build_seed_df, generate_narrative
 from . import __version__
 
 console = Console()
@@ -73,6 +75,43 @@ def export(year: int, format: str, data_dir: Path | None) -> None:
     computer = GiverComputer(data_path)
     out_path = computer.export(year=year, format=format)
     console.print(f"[green]✓[/green] Exported: {out_path}")
+
+
+@main.command("export-slopometry")
+@click.option("--year", "-y", type=int, default=2025, help="Year to export seed data for")
+@click.option("--top-n", "-n", type=int, default=10, help="Number of top countries to highlight in narrative")
+@click.option("--output-dir", "-o", type=click.Path(file_okay=False), default=None)
+@click.option("--data-dir", "-d", type=click.Path(exists=True, file_okay=False), default=None)
+def export_slopometry(year: int, top_n: int, output_dir: Path | None, data_dir: Path | None) -> None:
+    """Generate MiroFish-compatible seed data and simulation narrative."""
+    data_path = Path(data_dir) if data_dir else None
+    computer = GiverComputer(data_path)
+    out_dir = Path(output_dir) if output_dir else computer.output_dir
+
+    # Load computed GIVER data
+    csv_path = computer.output_dir / f"giver_index_{year}.csv"
+    if not csv_path.exists():
+        console.print(f"[red]No data for {year}. Run `giver-index compute --year {year}` first.[/red]")
+        sys.exit(1)
+
+    df = pd.read_csv(csv_path)
+
+    # Build seed CSV
+    seed_df = build_seed_df(df)
+    seed_path = out_dir / f"slopometry_seed_{year}.csv"
+    seed_df.to_csv(seed_path, index=False)
+
+    # Write narrative
+    narrative = generate_narrative(year, top_n=top_n)
+    narrative_path = out_dir / f"slopometry_narrative_{year}.txt"
+    narrative_path.write_text(narrative)
+
+    console.print(f"[green]✓[/green] Seed CSV: {seed_path} ({len(seed_df)} agents)")
+    console.print(f"[green]✓[/green] Narrative: {narrative_path}")
+    console.print(f"\nSeed preview:")
+    console.print(seed_df.head(5).to_string(index=False))
+    console.print(f"\nNarrative excerpt:")
+    console.print(narrative[:500] + "...")
 
 
 if __name__ == "__main__":
