@@ -5,14 +5,17 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
+import requests
 
 from .feeds import FeedCache
 from .scoring import (
     compute_evidence_based,
     compute_generative,
     compute_giver_index,
+    compute_impact,
     compute_rooted,
 )
 
@@ -44,7 +47,7 @@ class GiverComputer:
     # Public API
     # -------------------------------------------------------------------------
 
-    def compute(self, year: int = 2025, weights: dict[str, float] | None = None) -> pd.DataFrame:
+    def compute(self, year: int = 2025, weights: Optional[dict[str, float]] = None) -> pd.DataFrame:
         """Compute the GIVER index for all available countries.
 
         Steps:
@@ -63,22 +66,23 @@ class GiverComputer:
         # Step 2 — fetch feeds
         hofstede_df = self._fetch_hofstede()
         wvs_df = self._fetch_wvs(countries)
+        gdp_df = self._fetch_world_bank()
         log.info("  Hofstede loaded: %d rows", len(hofstede_df))
         log.info("  WVS loaded: %d rows", len(wvs_df))
+        log.info("  World Bank GDP: %d rows", len(gdp_df))
 
         # Step 3 — join dimension sub-scores
         df = countries.copy()
         df = df.merge(hofstede_df[["iso3", "ltv", "ivr"]], on="iso3", how="left")
         df = df.merge(wvs_df, on="iso3", how="left")
+        df = df.merge(gdp_df, on="iso3", how="left")
         df["region"] = df["region"].fillna("Unknown")
 
-        # Placeholder joins for optional feeds
-        # TODO: Wire up World Bank, Pew, WVS, GitHub Archive when available
-
-        # Step 3b — compute currently-available component scores explicitly
+        # Compute component scores
         df["generative"] = compute_generative(df)
         df["evidence_based"] = compute_evidence_based(df)
         df["rooted"] = compute_rooted(df)
+        df["impact"] = compute_impact(df)  # GDP per capita → impact capacity
 
         # Step 4 — compute composite
         df["giver_score"] = compute_giver_index(df, weights)
@@ -273,6 +277,50 @@ class GiverComputer:
             .mean()
         )
         return matched
+
+    def _fetch_world_bank(self) -> pd.DataFrame:
+        """Fetch World Bank GDP per capita PPP for all countries.
+
+        Uses NY.GDP.PCAP.PP.KD (GDP per capita, PPP, constant 2017 international $).
+        Returns DataFrame with iso3 and gdp_ppp columns.
+        """
+        cache_path = self.feed_cache.get("world_bank_gdp")
+        if cache_path and cache_path.exists():
+            log.info("Using cached World Bank GDP data")
+        else:
+            # Fetch all countries in one call (JSON paginated, per_page=300 covers ~98%)
+            log.info("Fetching World Bank GDP per capita from API...")
+            url = "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.PCAP.PP.KD?format=json&per_page=300&date=2023"
+            resp = requests.get(url, timeout=60)
+            resp.raise_for_status()
+            data = resp.json()
+
+            # WB API returns [meta, data_array]
+            if not isinstance(data, list) or len(data) < 2:
+                log.warning("Unexpected World Bank API response structure")
+                return pd.DataFrame(columns=["iso3", "gdp_ppp"])
+
+            records = []
+            for entry in data[1]:
+                country_code = entry.get("countryiso3code", "")
+                value = entry.get("value")
+                if country_code and value is not None:
+                    records.append({"iso3": country_code, "gdp_ppp": float(value)})
+
+            if records:
+                wb_df = pd.DataFrame(records).drop_duplicates(subset="iso3", keep="first")
+                out_path = self.feed_cache.cache_dir / "world_bank_gdp.csv"
+                wb_df.to_csv(out_path, index=False)
+                self.feed_cache.set("world_bank_gdp", "world_bank_gdp.csv", {"url": url, "rows": len(wb_df)})
+                log.info("  World Bank cached: %d countries", len(wb_df))
+                return wb_df
+
+            return pd.DataFrame(columns=["iso3", "gdp_ppp"])
+
+        df = pd.read_csv(cache_path)
+        if "iso3" not in df.columns or "gdp_ppp" not in df.columns:
+            return pd.DataFrame(columns=["iso3", "gdp_ppp"])
+        return df[["iso3", "gdp_ppp"]].drop_duplicates(subset="iso3", keep="first")
 
     def _export_geojson(self, df: pd.DataFrame, year: int) -> Path:
         """Merge GIVER scores onto country GeoJSON for map visualization."""
