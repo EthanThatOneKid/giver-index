@@ -127,6 +127,21 @@ class GiverComputer:
                     "region": props.get("REGION_UN", ""),
                 })
             df = pd.DataFrame(records).dropna(subset=["iso3"])
+
+            # Patch iso3=-99 entries that Hofstede has real codes for
+            PATCH_ISO3 = {
+                "France": "FRA",
+                "Norway": "NOR",
+            }
+            for name, iso3 in PATCH_ISO3.items():
+                df.loc[df["country_name"] == name, "iso3"] = iso3
+
+            # Drop territory placeholders (iso3 is still -99 or similar)
+            df = df[df["iso3"].str.match(r"^[A-Z]{3}$", na=False)]
+
+            # Deduplicate
+            df = df.drop_duplicates(subset="iso3", keep="first")
+
             return df
 
         # Fallback minimal list
@@ -159,61 +174,42 @@ class GiverComputer:
         }
         df = df.rename(columns={k: v for k, v in rename.items() if k in df.columns})
 
-        # Map Hofstede internal codes → ISO3
+        # Exclude Hofstede's special / non-country codes (-99, empty, etc.)
+        df = df[df["hofstede_code"].str.match(r"^[A-Z]{3}$", na=False)].copy()
+
+        # Map Hofstede internal codes → ISO3.
+        # Strategy:
+        #  1. Only translate aggregate codes that are NOT valid countries
+        #  2. Let valid ISO3 codes pass through as-is
         iso3_map = {
-            "AFG": "AFG", "ALB": "ALB", "ALG": "DZA", "ANG": "AGO", "ARA": "ARE",
-            "ARG": "ARG", "ARM": "ARM", "AUS": "AUS", "AUT": "AUT", "AZE": "AZE",
-            "BDI": "BDI", "BEL": "BEL", "BEN": "BEN", "BFA": "BFA", "BGD": "BGD",
-            "BGR": "BGR", "BHR": "BHR", "BHS": "BHS", "BIH": "BIH", "BLR": "BLR",
-            "BOL": "BOL", "BRA": "BRA", "BRB": "BRB", "BSG": "BGD", "BTN": "BTN",
-            "BWA": "BWA", "CAF": "CAF", "CAN": "CAN", "CHE": "CHE", "CHL": "CHL",
-            "CHN": "CHN", "CIV": "CIV", "CMR": "CMR", "COD": "COD", "COG": "COG",
-            "COL": "COL", "COM": "COM", "CPV": "CPV", "CRI": "CRI", "CZE": "CZE",
-            "DEU": "DEU", "DNK": "DNK", "DOM": "DOM", "ECU": "ECU", "EGY": "EGY",
-            "ESP": "ESP", "EST": "EST", "ETH": "ETH", "FIN": "FIN", "FRA": "FRA",
-            "GAB": "GAB", "GAM": "GMB", "GBR": "GBR", "GEO": "GEO", "GHA": "GHA",
-            "GRC": "GRC", "GTM": "GTM", "GUY": "GUY", "HKG": "HKG", "HND": "HND",
-            "HRV": "HRV", "HTI": "HTI", "HUN": "HUN", "IDN": "IDN", "IND": "IND",
-            "IRL": "IRL", "IRN": "IRN", "IRQ": "IRQ", "ISL": "ISL", "ISR": "ISR",
-            "ITA": "ITA", "JAM": "JAM", "JOR": "JOR", "JPN": "JPN", "KAZ": "KAZ",
-            "KEN": "KEN", "KGZ": "KGZ", "KHM": "KHM", "KOR": "KOR", "KSA": "SAU",
-            "KWT": "KWT", "LAO": "LAO", "LBN": "LBN", "LBR": "LBR", "LBY": "LBY",
-            "LTU": "LTU", "LUX": "LUX", "LVA": "LVA", "MAR": "MAR", "MCO": "MCO",
-            "MDA": "MDA", "MDG": "MDG", "MEX": "MEX", "MKD": "MKD", "MLI": "MLI",
-            "MLT": "MLT", "MMR": "MMR", "MNE": "MNE", "MNG": "MNG", "MOZ": "MOZ",
-            "MRT": "MRT", "MUS": "MUS", "MYS": "MYS", "NAM": "NAM", "NER": "NER",
-            "NGA": "NGA", "NIC": "NIC", "NLD": "NLD", "NOR": "NOR", "NPL": "NPL",
-            "NZL": "NZL", "OMN": "OMN", "PAK": "PAK", "PAN": "PAN", "PER": "PER",
-            "PHL": "PHL", "PNG": "PNG", "POL": "POL", "PRY": "PRY", "PRT": "PRT",
-            "PRY": "PRY", "QAT": "QAT", "ROU": "ROU", "RUS": "RUS", "RWA": "RWA",
-            "SAU": "SAU", "SDN": "SDN", "SEN": "SEN", "SGP": "SGP", "SLE": "SLE",
-            "SLV": "SLV", "SRB": "SRB", "SSD": "SSD", "STP": "STP", "SUR": "SUR",
-            "SVK": "SVK", "SVN": "SVN", "SWE": "SWE", "SYR": "SYR", "TCD": "TCD",
-            "TGO": "TGO", "THA": "THA", "TJK": "TJK", "TKM": "TKM", "TTO": "TTO",
-            "TUN": "TUN", "TUR": "TUR", "TWN": "TWN", "TZA": "TZA", "UGA": "UGA",
-            "UKR": "UKR", "URY": "URY", "USA": "USA", "UZB": "UZB", "VEM": "VEN",
-            "VNM": "VNM", "YEM": "YEM", "ZAF": "ZAF", "ZMB": "ZMB", "ZWE": "ZWE",
-            # Hofstede custom regional aggregates (approximate to a representative ISO3)
-            "AFE": "ETH",  # Africa East → Ethiopia (representative)
-            "AFW": "GHA",  # Africa West → Ghana
-            "GRA": "NGA",  # East/West Africa aggregated → Nigeria
-            "MAA": "SAU",  # MENA Arabic → Saudi Arabia
-            "SEA": "SGP",  # Southeast Asia → Singapore
+            "AFE": "ETH",  # Africa East
+            "AFW": "GHA",  # Africa West
+            "GRA": "NGA",  # Greater Africa aggregated
+            "MAA": "SAU",  # MENA Arabic
+            "SEA": "SGP",  # Southeast Asia
+            # Non-ISO3 codes that need explicit translation
+            "BSG": "BGD",  # Bangladesh
+            "VEM": "VEN",  # Venezuela
+            "BUL": "BGR",  # Bulgaria
+            "SAL": "SLV",  # El Salvador
         }
-        df["iso3"] = df["hofstede_code"].map(iso3_map).fillna(df["hofstede_code"])
-
-        # Auto-map: Hofstede codes that happen to be valid ISO3
-        missing_iso3 = df[df["iso3"].isna()]["hofstede_code"].unique()
-        for code in missing_iso3:
-            if code == code.upper() and len(code) == 3:
-                df.loc[df["hofstede_code"] == code, "iso3"] = code
-
-        df["iso3"] = df["iso3"].fillna(df["hofstede_code"])
+        df["iso3"] = df["hofstede_code"].apply(
+            lambda c: iso3_map.get(c, c)  # auto-pass valid 3-letter uppercase codes
+        )
 
         # Numeric cleanup
         for col in ["ltv", "ivr"]:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col].replace("#NULL!", None), errors="coerce")
+
+        # When a country code maps to the same ISO3 from multiple Hofstede
+        # codes, prefer the country-specific row over regional aggregates.
+        # Assign priority: higher ltv/ivr = more data = higher priority.
+        df = df.sort_values(
+            ["iso3", "ltv", "ivr"], ascending=[True, False, False]
+        )
+        df = df.drop_duplicates(subset="iso3", keep="first")
+
         return df
 
     def _export_geojson(self, df: pd.DataFrame, year: int) -> Path:
