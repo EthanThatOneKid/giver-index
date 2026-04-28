@@ -6,7 +6,7 @@ An open standard for measuring the circular vs. linear tilt of cultures, organiz
 
 ## Status
 
-**109 countries currently score above zero** in the Hofstede + WVS pilot. **100 countries now carry a WVS evidence-based signal**, while the remaining gaps still need World Bank, Pew, GitHub, and other feeds. Work in progress.
+**239 countries are present in the current 2025 output table. 109 countries currently score above zero** in the Hofstede + WVS pilot. **100 countries now carry a WVS evidence-based signal**, while the remaining gaps still need World Bank, Pew, GitHub, and other feeds. Work in progress.
 
 ## Quick Start
 
@@ -17,7 +17,7 @@ giver-index compute --year 2025
 
 ## Current Findings (2025 Pilot)
 
-**Coverage:** 109 of 239 countries currently score above zero in the Hofstede + WVS pipeline. WVS now fills 100 countries for the `evidence_based` dimension, including many countries that previously scored 0 across the board.
+**Coverage:** 109 of 239 countries currently score above zero in the Hofstede + WVS pipeline. The full table includes all 239 countries from the current geography layer, but 130 still remain at 0 because they lack enough wired signal. WVS now fills 100 countries for the `evidence_based` dimension, including many countries that previously scored 0 across the board.
 
 **Top scorers (most circular):**
 | Rank | Country | LTV | WVS Self-Expression | IVR | GIVER |
@@ -47,6 +47,25 @@ giver-index compute --year 2025
 - Map data API: https://etok.zo.space/api/giver-map-data
 - GeoJSON API: https://etok.zo.space/api/geo-countries
 - GitHub repo: https://github.com/EthanThatOneKid/giver-index
+
+## Development Best Practices
+
+Before every commit:
+
+- Check your work.
+- Do tests pass?
+- Are lint errors resolved?
+- Ready to commit?
+- Do the results and outputs make sense?
+
+Typical validation loop:
+
+```bash
+ruff check .
+pytest
+giver-index compute --year 2025
+giver-index export-slopometry --year 2025
+```
 
 ## Project Structure
 
