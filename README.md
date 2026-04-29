@@ -8,11 +8,18 @@ An open standard for measuring the circular vs. linear tilt of cultures, organiz
 
 **239 countries** scored globally — only uninhabited territories (Antarctica, Pitcairn, etc.) remain "Unknown". Europe leads with highest mean circularity; Asia shows widest spread. All 6 UN regions represented.
 
+## Live Dashboard
+
+**Live at [`https://etok.zo.space/giver-map`](https://etok.zo.space/giver-map)** — public, no auth required. Shows all 197 scored countries with dimensional breakdowns and coverage gaps.
+
 ## Quick Start
 
 ```bash
 pip install -e .
 giver-index compute --year 2025
+giver-index inspect --year 2025
+giver-index export --year 2025 --format json   # or --format geojson
+giver-index export-mirofish --year 2025          # two-league MiroFish simulation seed
 ```
 
 ## Current Findings (2025 Pilot)
